@@ -1,0 +1,1 @@
+{"uuid":"78d16565-0563-4a29-8fc5-e5b69c5258c9","name":"Frame","children":["0d87a60f-944c-4137-b6bf-549dbdb6aa4e"],"befores":[],"afters":[{"name":"closeAppOld","status":"broken","stage":"finished","description":"","steps":[],"attachments":[],"parameters":[],"start":1693324394282,"stop":1693324394283}],"start":1693324394255,"stop":1693324394283}

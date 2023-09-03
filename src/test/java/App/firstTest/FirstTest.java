@@ -7,7 +7,13 @@ public class FirstTest extends AppiumLoad {
     @Test
     public void choosePreference(){
         home.chooseHeadline();
-        home.choosePlatform();
         home.choosepushlishing();
-         }
+        home.choosePlatform();
+
+    }
+    @Test
+    public void chooseAnotherList() throws InterruptedException {
+        home.chooseHeadline();
+        getitemformTopicSelection("ahmed");
+    }
 }

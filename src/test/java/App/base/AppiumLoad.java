@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -20,33 +21,37 @@ import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.options.UiAutomator2Options;
 import io.appium.java_client.service.local.AppiumDriverLocalService;
 import io.appium.java_client.service.local.AppiumServiceBuilder;
+import io.appium.java_client.touch.WaitOptions;
+import io.appium.java_client.touch.offset.PointOption;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebElement;
+import org.testng.Assert;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeSuite;
+
 import static io.appium.java_client.touch.WaitOptions.waitOptions;
 import static io.appium.java_client.touch.offset.PointOption.point;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
+
 import io.appium.java_client.android.nativekey.KeyEvent;
-
-
-
+import org.openqa.selenium.WebElement;
 
 
 public class AppiumLoad {
     public AppiumDriverLocalService service;
     public static AppiumDriver driver;
-    public static  AndroidDriver androidDriver;
-    String  appPackage = "com.google.samples.apps.nowinandroid";
+    public static AndroidDriver androidDriver;
+    String appPackage = "com.google.samples.apps.nowinandroid";
     UiAutomator2Options options = new UiAutomator2Options();
 
-    BasePage basePage ;
-  public   Home home;
-    private final By  app = (AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Now in Android')]"));
+    BasePage basePage;
+    public Home home;
+    private final By app = (AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Now in Android')]"));
 
 
     public AppiumDriverLocalService startAppiumServer(String ipAddress, int port) {
@@ -62,9 +67,10 @@ public class AppiumLoad {
         service.start();
         return service;
     }
+
     @BeforeSuite
     public void setup() throws IOException, InterruptedException {
-    startAppiumServer("127.0.0.1",4723);
+        startAppiumServer("127.0.0.1", 4723);
         if (driver == null) {
 
             Properties properties = new Properties();
@@ -74,12 +80,12 @@ public class AppiumLoad {
             options.setDeviceName("sdk_gphone64_x86_64");
             options.setPlatformVersion("14");
             options.setChromedriverExecutable("D:\\TESTING\\appium\\AppiumFrameworkDesign\\Frame\\src\\test\\resources\\chromedriver.exe");
-          // options.setApp("D:\\TESTING\\appium\\AppiumFrameworkDesign\\Frame\\src\\main\\Application\\ApiDemos-debug.apk");
+            // options.setApp("D:\\TESTING\\appium\\AppiumFrameworkDesign\\Frame\\src\\main\\Application\\ApiDemos-debug.apk");
             driver = new AndroidDriver(new URL(properties.getProperty("url2")), options);
-            basePage= new BasePage(driver);
+            basePage = new BasePage(driver);
             driver.manage().timeouts().implicitlyWait(ofSeconds(10));
-          //  driver.findElement(AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Now in Android')]")).click();
-             androidDriver = (AndroidDriver) driver;
+            //  driver.findElement(AppiumBy.xpath("//android.widget.TextView[contains(@text, 'Now in Android')]")).click();
+            androidDriver = (AndroidDriver) driver;
 
             androidDriver.pressKey(new KeyEvent(AndroidKey.HOME));
             verticalSwipeByPercentages(0.8, 0.4, 0.5);
@@ -87,13 +93,14 @@ public class AppiumLoad {
             basePage.openApp();
             home = basePage.openHome();
             Thread.sleep(4000);
-        //     appPackage = String.valueOf(options.getAppPackage());
-            System.out.println("App Package: " + appPackage);
+            //     appPackage = String.valueOf(options.getAppPackage());
+            System.out.println("AppPackage: " + appPackage);
             home.acceptNotification();
         }
-}
+    }
+
     //Press by coordinates
-   // to open the menu of the app 
+    // to open the menu of the app
     public void verticalSwipeByPercentages(double startPercentage, double endPercentage, double anchorPercentage) {
         Dimension size = driver.manage().window().getSize();
         int anchor = (int) (size.width * anchorPercentage);
@@ -105,10 +112,11 @@ public class AppiumLoad {
                 .moveTo(point(anchor, endPoint))
                 .release().perform();
     }
-    @AfterTest
+
+    @AfterSuite
     public void closeAppnew() throws InterruptedException {
         androidDriver = (AndroidDriver) driver;
-        System.out.println("why" + appPackage);
+        System.out.println("appdriver" + appPackage);
 
         long startTime = System.currentTimeMillis();
         long timeoutInSeconds = 20;
@@ -118,6 +126,8 @@ public class AppiumLoad {
             try {
                 androidDriver.terminateApp(appPackage);
                 System.out.println("App terminated successfully.");
+                clearAppCacheUsingADB(appPackage);
+                System.out.println("App clear cash1");
                 return; // Exit the loop if termination is successful
             } catch (Exception e) {
                 // Handle the exception or log it if needed
@@ -125,15 +135,16 @@ public class AppiumLoad {
             }
 
         }
-        clearAppCacheUsingADB(appPackage);
+
     }
 
-        public void closeAppOld(){
+    public void closeAppOld() {
         androidDriver = (AndroidDriver) driver;
         androidDriver.closeApp();
 
-clearAppCacheUsingADB(appPackage);
+        clearAppCacheUsingADB(appPackage);
     }
+
     private static void clearAppCacheUsingADB(String appPackage) {
         String adbCommand = String.format("adb shell pm clear %s", appPackage);
         System.out.println(appPackage);
@@ -149,6 +160,7 @@ clearAppCacheUsingADB(appPackage);
             e.printStackTrace();
         }
     }
+
     public void scrollToEndAction() {
         boolean canScrollMore;
         do {
@@ -182,23 +194,60 @@ clearAppCacheUsingADB(appPackage);
      *
      * */
     public void getitemformTopicSelection(String element) throws InterruptedException {
+        int productCount = driver.findElements(home.getTopicSeection()).size();
 
-        /*
-         * beascue we have more than one element have same i use for loop git the text and index of
-         * element to compare it with the required text if match get the index to pass it to click on it
-         * */
-        int productCount = (driver.findElements(home.getTopicSeection())).size();
-        for (int i = 0; i < productCount; i++) {
+        // Check if there are at least two elements to proceed
+        if (productCount < 2) {
+            System.out.println("There are not enough elements to proceed.");
+            return; // Exit the function if there are not enough elements
+        }
 
+        int i;
+        for (i = 0; i < productCount; i++) {
             String product = driver.findElements(home.getTopicSeection()).get(i).getText();
             if (product.equals(element)) {
+                System.out.println("Found element: " + product);
                 driver.findElements(home.getTopicSeection()).get(i).click();
+                break; // Exit the loop once the element is found and clicked
             }
-
         }
-        Thread.sleep(2000);
 
+        // Check if the element was found and clicked
+        Assert.assertTrue(i < productCount, "Element '" + element + "' not found in the list.");
+
+        // Additional assertions or actions can be performed after clicking the element
+        Thread.sleep(2000);
+        // For example, you can assert that a specific element is displayed after clicking
+        Assert.assertEquals(driver.findElements(home.getTopicSeection()).get(i).getText(), element);
     }
 
 
+    public void scrollUntillYoufindElement(String element) throws InterruptedException {
+        //driver.findElement(AppiumBy.androidUIAutomator("new UiScrollable(new UiSelector().scrollable(true)).scrollForward();"));
+        //driver.findElement(AppiumBy.androidUIAutomator("new UiScrollable(new UiSelector().scrollable(true)).scrollBackward();"));
+        Dimension size = driver.manage().window().getSize();
+        int startX = (int) (size.width * 0.8);
+        int endX = (int) (size.width * 0.2);
+        int startY = size.height / 2;
+
+        new TouchAction((PerformsTouchActions) driver)
+                .press(PointOption.point(startX, startY))
+                .waitAction(WaitOptions.waitOptions(Duration.ofMillis(500)))
+                .moveTo(PointOption.point(endX, startY))
+                .release()
+                .perform();
+
+        Thread.sleep(4000);
+        driver.findElement(AppiumBy.androidUIAutomator("new UiScrollable(new UiSelector()).scrollIntoView(text(\"" + element + "\"));")).click();
+        //doucment.querySelector('js path of element ');
+        //#toggle-all to find ccs selectors by id
+        // .toggle-all to find ccs selector by class
+        /*
+         * ul.todo-list li
+         *     to find the list of item which under of list
+         *
+         * document.querySelector(" ul.todo-list > li:nth-child(1) input.toggle").click()
+         *                              to click on element
+         * */
+    }
 }

@@ -14,6 +14,6 @@ public class FirstTest extends AppiumLoad {
     @Test
     public void chooseAnotherList() throws InterruptedException {
         home.chooseHeadline();
-        getitemformTopicSelection("ahmed");
+        scrollUntillYoufindElement("UI");
     }
 }

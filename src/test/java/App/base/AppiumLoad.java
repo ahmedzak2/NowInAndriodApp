@@ -7,15 +7,13 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import App.pages.BasePage;
 import App.pages.Home;
 import com.google.common.collect.ImmutableMap;
-import io.appium.java_client.AppiumBy;
-import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.PerformsTouchActions;
-import io.appium.java_client.TouchAction;
+import io.appium.java_client.*;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.nativekey.AndroidKey;
 import io.appium.java_client.android.options.UiAutomator2Options;
@@ -58,12 +56,7 @@ public class AppiumLoad {
         Map<String, String> environment = new HashMap<>();
         environment.put("NO_RESET", "true");
 
-        service = new AppiumServiceBuilder()
-                .withAppiumJS(new File("C:\\Users\\20112\\AppData\\Roaming\\npm\\node_modules\\appium\\build\\lib\\main.js"))
-                .withIPAddress(ipAddress)
-                .usingPort(port)
-                .withEnvironment(environment)
-                .build();
+        service = new AppiumServiceBuilder().withAppiumJS(new File("C:\\Users\\20112\\AppData\\Roaming\\npm\\node_modules\\appium\\build\\lib\\main.js")).withIPAddress(ipAddress).usingPort(port).withEnvironment(environment).build();
         service.start();
         return service;
     }
@@ -106,11 +99,7 @@ public class AppiumLoad {
         int anchor = (int) (size.width * anchorPercentage);
         int startPoint = (int) (size.height * startPercentage);
         int endPoint = (int) (size.height * endPercentage);
-        new TouchAction((PerformsTouchActions) driver)
-                .press(point(anchor, startPoint))
-                .waitAction(waitOptions(ofMillis(1000)))
-                .moveTo(point(anchor, endPoint))
-                .release().perform();
+        new TouchAction((PerformsTouchActions) driver).press(point(anchor, startPoint)).waitAction(waitOptions(ofMillis(1000))).moveTo(point(anchor, endPoint)).release().perform();
     }
 
     @AfterSuite
@@ -164,26 +153,16 @@ public class AppiumLoad {
     public void scrollToEndAction() {
         boolean canScrollMore;
         do {
-            ImmutableMap<String, Object> scrollParams = ImmutableMap.<String, Object>builder()
-                    .put("left", 100)
-                    .put("top", 100)
-                    .put("width", 200)
-                    .put("height", 200)
-                    .put("direction", "down")
-                    .put("percent", 0.3)
-                    .build();
+            ImmutableMap<String, Object> scrollParams = ImmutableMap.<String, Object>builder().put("left", 100).put("top", 100).put("width", 200).put("height", 200).put("direction", "down").put("percent", 0.3).build();
 
             canScrollMore = (Boolean) ((JavascriptExecutor) driver).executeScript("mobile: scrollGesture", scrollParams);
         } while (canScrollMore);
     }
 
     public void swipeAction(WebElement ele, String direction) {
-        ((JavascriptExecutor) driver).executeScript("mobile: swipeGesture", ImmutableMap.of(
-                "elementId", ((RemoteWebElement) ele).getId(),
+        ((JavascriptExecutor) driver).executeScript("mobile: swipeGesture", ImmutableMap.of("elementId", ((RemoteWebElement) ele).getId(),
 
-                "direction", direction,
-                "percent", 0.75
-        ));
+                "direction", direction, "percent", 0.75));
 
 
     }
@@ -222,6 +201,7 @@ public class AppiumLoad {
     }
 
 
+    // use for loop to make it scroll till it found the element
     public void scrollUntillYoufindElement(String element) throws InterruptedException {
         //driver.findElement(AppiumBy.androidUIAutomator("new UiScrollable(new UiSelector().scrollable(true)).scrollForward();"));
         //driver.findElement(AppiumBy.androidUIAutomator("new UiScrollable(new UiSelector().scrollable(true)).scrollBackward();"));
@@ -239,15 +219,53 @@ public class AppiumLoad {
 
         Thread.sleep(4000);
         driver.findElement(AppiumBy.androidUIAutomator("new UiScrollable(new UiSelector()).scrollIntoView(text(\"" + element + "\"));")).click();
-        //doucment.querySelector('js path of element ');
-        //#toggle-all to find ccs selectors by id
-        // .toggle-all to find ccs selector by class
-        /*
-         * ul.todo-list li
-         *     to find the list of item which under of list
-         *
-         * document.querySelector(" ul.todo-list > li:nth-child(1) input.toggle").click()
-         *                              to click on element
-         * */
+
+
     }
+    public void scrollUntilYouFindElement2(String elementText) throws InterruptedException {
+        while (true) {
+            try {
+                driver.findElement(new AppiumBy.ByAndroidUIAutomator("new UiScrollable(new UiSelector()).scrollIntoView(text(\"" + elementText + "\"));")).click();
+                return; // Element found and clicked, exit the loop
+            } catch (Exception e) {
+                // Element not found, continue scrolling
+                System.out.println("it catch the error ziko");
+                scrollLeft();
+                Thread.sleep(2000); // Adjust sleep duration as needed
+                scrollRight();
+                Thread.sleep(2000); // Adjust sleep duration as needed
+            }
+        }
+    }
+
+    // Helper method to scroll left
+    private void scrollLeft() {
+        Dimension size = driver.manage().window().getSize();
+        int startX = (int) (size.width * 0.8);
+        int endX = (int) (size.width * 0.2);
+        int startY = size.height / 2;
+
+        new TouchAction((PerformsTouchActions) driver)
+                .press(PointOption.point(startX, startY))
+                .waitAction(WaitOptions.waitOptions(Duration.ofMillis(500)))
+                .moveTo(PointOption.point(endX, startY))
+                .release()
+                .perform();
+    }
+
+    // Helper method to scroll right
+    private void scrollRight() {
+        Dimension size = driver.manage().window().getSize();
+        int startX = (int) (size.width * 0.2);
+        int endX = (int) (size.width * 0.8);
+        int startY = size.height / 2;
+
+        new TouchAction((PerformsTouchActions) driver)
+                .press(PointOption.point(startX, startY))
+                .waitAction(WaitOptions.waitOptions(Duration.ofMillis(500)))
+                .moveTo(PointOption.point(endX, startY))
+                .release()
+                .perform();
+    }
+
 }
